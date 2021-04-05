@@ -24,4 +24,5 @@ urlpatterns = [
     path('signin/',Signin.as_view(),name="Signin"),
     path('signup/',Signup.as_view(),name="Signup"),
     path('issignedin/',IsSignedIn.as_view(),name="IsSignedIn"),
+    path('question/',AskQuestion.as_view(),name="question"),
 ]

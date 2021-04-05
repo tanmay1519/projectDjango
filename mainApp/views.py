@@ -31,10 +31,10 @@ class Homepage(APIView):
 
 class Signin(APIView):
     def post (self,request):
-        global IsloggedIn
+        global IsloggedIn,LoggedUser
         
         print(IsloggedIn)
-        data={'status':""}
+        data={'status':"",'user':{}}
         if IsloggedIn==True :
             data['status']="Already Logged In"
         else :
@@ -48,9 +48,11 @@ class Signin(APIView):
                 IsloggedIn=False
             elif (len(User)==1):
                 if (password==User[0].password):
-                    data['status']="Success"
                     IsloggedIn=True
-                    LoggedUser=User[0]
+                    LoggedUser={"name":User[0].name,"email":User[0].email,"branch":User[0].branch,"user_id":User[0].user_id}
+                    data['status']="Success"
+                    data['user']=LoggedUser
+                    
                 else :
                     data['status']='Wrong Email or Password'
                     IsloggedIn=False
@@ -85,3 +87,17 @@ class Signup(APIView):
         else :
             data:{'Status':"Failed"}
         return Response(data)
+class AskQuestion(APIView):
+
+    def post(self,request):
+      data={'status':""}
+     
+      if (request.method=="POST"):
+        data=request.data
+        topic=data['topic']
+        Question=data['question']
+        user_id=data['user_id']
+        Question=question(topic=topic,question=Question,user_id=user_id)
+        data['status']="Success"
+        Question.save()
+      return Response(data)

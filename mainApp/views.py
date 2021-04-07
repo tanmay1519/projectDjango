@@ -101,3 +101,39 @@ class AskQuestion(APIView):
         data['status']="Success"
         Question.save()
       return Response(data)
+
+class LoadQuestions(APIView):
+    def get (self,request):
+        data={'status':""}
+        if (request.method=="GET"):
+            questionsList=question.objects.values('question_id','user_id','question','topic','upvote','downvote')
+            # change questionList o in a form to transport
+            newQuesList=[]
+            for oldQues in questionsList:
+                tempQues={}
+                tempQues['question_id']=oldQues['question_id']
+                tempQues['user_id']=oldQues['user_id']
+                tempQues['question']=oldQues['question']
+                tempQues['downvote']=oldQues['downvote']
+                tempQues['upvote']=oldQues['upvote']
+                # print("old",(oldQues))
+                # print((tempQues))
+                newQuesList.append(tempQues)
+            for ques in newQuesList :
+                ques['answer']=""
+                ansList=answer.objects.filter(question_id=ques['question_id'])
+                if len(ansList)>0:
+                    firstAns=ansList[0]
+                    q_id=firstAns.question_id
+                    u_id=firstAns.user_id
+                    a_id=firstAns.answer_id
+                    ans=firstAns.answer
+                    upvote=firstAns.upvote
+                    downvote=firstAns.downvote
+                    selected_answer={'question_id':q_id,'user_id':u_id,'answer_id':a_id,'answer':ans,'upvote':upvote,'downvote':downvote}
+                    ques['answer']=selected_answer
+                    # sort by upvotes
+            print(newQuesList)
+            data['status']='Success'
+            data['questionsData']=newQuesList
+        return Response(data)

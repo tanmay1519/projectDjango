@@ -225,3 +225,26 @@ class Signout(APIView):
         print(data)
         return Response(data) 
        
+class GetUserById(APIView):
+    def post(self,request):
+        data={}
+        which_user = int(request.data['user_id'])
+       
+        userList = user.objects.filter(user_id=which_user)
+     
+        if len(userList) == 1 :
+            questioner={"user_id":userList[0].user_id,"name":userList[0].name,"email":userList[0].email,"branch":userList[0].branch}
+            data['status']="Success"
+            data['QuestionUser']=questioner
+            
+        else :
+            data['status']="Failed"
+        return Response(data)
+class PostAnswer (APIView) :
+    def post (self,request):
+        data={}
+        ans_data=request.data
+        Answer = answer(answer=ans_data['answer'],user_id=ans_data['user_id'],question_id=ans_data['question_id'])
+        Answer.save()
+        data['status']="Success"
+        return Response(data)

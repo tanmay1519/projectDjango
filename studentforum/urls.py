@@ -27,4 +27,6 @@ urlpatterns = [
     path('question/',AskQuestion.as_view(),name="question"),
     path('loadQuestions/',LoadQuestions.as_view(),name="loadQuestions"),
     path('signout/',Signout.as_view(),name="signout"),
+    path('getuser/',GetUserById.as_view(),name="getUserById"),
+    path('postAnswer/',PostAnswer.as_view(),name="postAnswer"),
 ]

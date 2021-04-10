@@ -26,4 +26,5 @@ urlpatterns = [
     path('issignedin/',IsSignedIn.as_view(),name="IsSignedIn"),
     path('question/',AskQuestion.as_view(),name="question"),
     path('loadQuestions/',LoadQuestions.as_view(),name="loadQuestions"),
+    path('signout/',Signout.as_view(),name="signout"),
 ]

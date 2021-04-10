@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from . serializer import *
 IsloggedIn=False
 LoggedUser=False
+loggedUsersdata={}
+loggedUsersList=[]
 class Homepage(APIView):
     # serializer_class = ReactSerializer
 
@@ -29,49 +31,49 @@ class Homepage(APIView):
     #     data=[]
     #     return Response(details)
 
-class Signin(APIView):
-    def post (self,request):
-        global IsloggedIn,LoggedUser
+# class Signin(APIView):
+#     def post (self,request):
+#         global IsloggedIn,LoggedUser
         
-        print(IsloggedIn)
-        data={'status':"",'user':{}}
-        if IsloggedIn==True :
-            data['status']="Already Logged In"
-        else :
-          if (request.method=="POST"):
-            userdata=request.data
-            email=userdata['email']
-            password=userdata['password']
-            User=user.objects.filter(email=email)
-            if (len(User)==0):
-                data['status']='No User Found'
-                IsloggedIn=False
-            elif (len(User)==1):
-                if (password==User[0].password):
-                    IsloggedIn=True
-                    LoggedUser={"name":User[0].name,"email":User[0].email,"branch":User[0].branch,"user_id":User[0].user_id}
-                    data['status']="Success"
-                    data['user']=LoggedUser
+#         print(IsloggedIn)
+#         data={'status':"",'user':{}}
+#         if IsloggedIn==True :
+#             data['status']="Already Logged In"
+#         else :
+#           if (request.method=="POST"):
+#             userdata=request.data
+#             email=userdata['email']
+#             password=userdata['password']
+#             User=user.objects.filter(email=email)
+#             if (len(User)==0):
+#                 data['status']='No User Found'
+#                 IsloggedIn=False
+#             elif (len(User)==1):
+#                 if (password==User[0].password):
+#                     IsloggedIn=True
+#                     LoggedUser={"name":User[0].name,"email":User[0].email,"branch":User[0].branch,"user_id":User[0].user_id}
+#                     data['status']="Success"
+#                     data['user']=LoggedUser
                     
-                else :
-                    data['status']='Wrong Email or Password'
-                    IsloggedIn=False
+#                 else :
+#                     data['status']='Wrong Email or Password'
+#                     IsloggedIn=False
 
-            else :
-                data['status']='UnIdentified Error'
-                IsloggedIn=False
+#             else :
+#                 data['status']='UnIdentified Error'
+#                 IsloggedIn=False
 
-        return Response(data)
-class IsSignedIn(APIView):
-    def  get(self,request):
-        data={'user':"","status":""}
-        if IsloggedIn == True and LoggedUser !=False :
-            data['status']='LoggedIn'
-            data['user']=LoggedUser
-        else :
-            data['status']='No User LoggedIn'
-            data['user']=False 
-        return Response(data)
+#         return Response(data)
+# class IsSignedIn(APIView):
+#     def  get(self,request):
+#         data={'user':"","status":""}
+#         if IsloggedIn == True and LoggedUser !=False :
+#             data['status']='LoggedIn'
+#             data['user']=LoggedUser
+#         else :
+#             data['status']='No User LoggedIn'
+#             data['user']=False 
+#         return Response(data)
 class Signup(APIView):
     def post (self,request):
         if (request.method=="POST"):
@@ -137,3 +139,89 @@ class LoadQuestions(APIView):
             data['status']='Success'
             data['questionsData']=newQuesList
         return Response(data)
+
+
+# TODO:
+class Signin(APIView):
+    def post (self,request):
+        global loggedUsersdata,loggedUsersList
+        data={'status':"",'user':{}}
+        userdata=request.data
+        email=userdata['email']
+        password=userdata['password']
+        User=user.objects.filter(email=email)
+        # print("CHECK_>>",loggedUsersList,User[0].user_id)
+        if len(User) == 0 :
+            data['status']='No User Found'
+        elif len(User)==1 :
+            if User[0].user_id in loggedUsersList:
+                data['status']="Already Logged in"
+                data['user']=loggedUsersdata[User[0].user_id]
+            else :
+
+                if User[0].password == password:
+                    LoggedUser={"name":User[0].name,"email":User[0].email,"branch":User[0].branch,"user_id":User[0].user_id}
+                    data['status']="Success"
+                    data['user']=LoggedUser  
+                    loggedUsersList.append(User[0].user_id)
+                    loggedUsersdata[User[0].user_id]=LoggedUser
+                else :
+                    data['status']="Username and Password dont match"
+        else :
+            data['status']="Unidentified Error" 
+        return Response(data)
+
+class IsSignedIn(APIView):
+    def post(self,request):
+        global loggedUsersdata,loggedUsersList
+        dataFromFE=request.data
+        data={}
+        user_idtocheck=dataFromFE['user_id']
+        if user_idtocheck in loggedUsersList :
+            data['status']="Success"
+            data['user']=loggedUsersdata[user_idtocheck]
+        else :
+            data['status']="Failure"
+        return Response(data)
+        # if User[0].user_id in loggedUsersList :
+        #     data['status']="Already Logged In"
+        # else :
+        #   if (request.method=="POST"):
+        #     if (len(User)==0):
+        #         data['status']='No User Found'
+        #         IsloggedIn=False
+        #     elif (len(User)==1):
+        #         if (password==User[0].password):
+        #             IsloggedIn=True
+        #             LoggedUser={"name":User[0].name,"email":User[0].email,"branch":User[0].branch,"user_id":User[0].user_id}
+        #             data['status']="Success"
+        #             data['user']=LoggedUser
+                    
+        #         else :
+        #             data['status']='Wrong Email or Password'
+        #             IsloggedIn=False
+
+        #     else :
+        #         data['status']='UnIdentified Error'
+        #         IsloggedIn=False
+
+        return Response(data)
+
+ 
+class Signout(APIView):
+    
+    def post(self,request):
+        data={}  
+        if request.data :
+            user_data=request.data['Signoutuser_id']
+            if user_data in loggedUsersList :
+               loggedUsersList.remove(user_data)
+               loggedUsersdata.pop(user_data)
+               data['status']="Success"
+            else :  
+                data['status']="Failed"
+        else :
+            data['status']="Failed"
+        print(data)
+        return Response(data) 
+       

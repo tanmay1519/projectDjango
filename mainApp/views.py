@@ -104,6 +104,35 @@ class AskQuestion(APIView):
         Question.save()
       return Response(data)
 
+
+class LoadAllAnswers(APIView):
+    def post(self,request):
+        data={"status":"","ans_data":""}
+        question_data=request.data['question_data']
+        print(question_data)
+        ansList = answer.objects.filter(question_id=question_data)
+        ans_of_question = []
+        for ans in ansList :
+            this_answer={}
+            this_answer['user_id']=ans.user_id
+            this_answer['question_id']=ans.question_id
+            this_answer['answer_id']=ans.answer_id
+            this_answer['answer']=ans.answer
+            this_answer['upvote']=ans.upvote
+            this_answer['downvote']=ans.downvote
+            ans_of_question.append(this_answer)
+        data['ans_data']=ans_of_question
+        return Response(data)
+
+
+
+
+
+
+
+
+
+
 class LoadQuestions(APIView):
     def get (self,request):
         data={'status':""}
@@ -224,7 +253,50 @@ class Signout(APIView):
             data['status']="Failed"
         print(data)
         return Response(data) 
-       
+
+# TODO: 
+
+class Search(APIView):
+    def post (self,request):
+        data={"status":"Failed","sendData":""}
+        search_data = request.data['search']
+        questionsList=question.objects.values('question_id','user_id','question','topic','upvote','downvote')
+        send_questionsList = []
+        for ques in questionsList :
+            if search_data in ques['topic'] or search_data in ques['question'] :
+                
+                ques['answer']=""
+                ansList=answer.objects.filter(question_id=ques['question_id'])
+                if len(ansList)>0:
+                    firstAns=ansList[0]
+                    q_id=firstAns.question_id
+                    u_id=firstAns.user_id
+                    a_id=firstAns.answer_id
+                    ans=firstAns.answer
+                    upvote=firstAns.upvote
+                    downvote=firstAns.downvote
+                    selected_answer={'question_id':q_id,'user_id':u_id,'answer_id':a_id,'answer':ans,'upvote':upvote,'downvote':downvote}
+                    ques['answer']=selected_answer                
+                send_questionsList.append(ques)
+                data['status']="success"
+
+        data['sendData'] = send_questionsList
+        print(send_questionsList)
+        return Response(data)
+
+class Check(APIView):
+    def post(self,request):
+        data={"status":"Success","contains":""}
+        jwt_data=request.data['jwt_data']
+
+        print(loggedUsersList,jwt_data)
+        if int(jwt_data['user_id']) in loggedUsersList :
+            data['contains']="Yes"
+        else :
+            data["contains"]="No"
+        return Response(data)
+
+
 class GetUserById(APIView):
     def post(self,request):
         data={}
